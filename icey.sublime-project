@@ -1,0 +1,39 @@
+{
+    "folders":
+    [
+        {
+            "path": ".",
+            "name": "Project",
+            "file_include_patterns": [
+                "icey.sublime-project",
+                "package.json",
+                ".eslintrc.json"
+            ],
+            "folder_exclude_patterns": [
+                "*"
+            ]
+        },
+        {
+            "path": "src",
+            "name": "Source"
+        },
+        {
+            "path": "test",
+            "name": "Tests"
+        },
+    ],
+    "settings":
+    {
+        "folder_exclude_patterns":
+        [
+            ".git",
+            "node_modules",
+            "build"
+        ],
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true,
+        "ESLint-Formatter": {
+            "format_on_save": true
+        }
+    }
+}

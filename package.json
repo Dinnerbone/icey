@@ -1,0 +1,28 @@
+{
+  "name": "icey",
+  "version": "0.0.0",
+  "description": "IRC statistics and fun",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dinnerbone/icey.git"
+  },
+  "author": "Nathan \"Dinnerbone\" Adams",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/Dinnerbone/icey/issues"
+  },
+  "homepage": "https://github.com/Dinnerbone/icey#readme",
+  "private": true,
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.2.2",
+    "mocha": "^3.0.0"
+  },
+  "dependencies": {
+    "xregexp": "^3.1.1"
+  }
+}
