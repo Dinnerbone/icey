@@ -63,7 +63,7 @@ class ZncParser {
                 }),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] -(?<nick>[^>]+)-(?: (?<message>.*)|)$', subs),
+                pattern: XRegExp.build('^\\[({{time}})\\] -(?<nick>[^-]+)- (?<message>.*)$', subs),
                 result: match => ({
                     type: 'notice',
                     time: match.time,
