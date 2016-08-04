@@ -1,9 +1,9 @@
 const expect = require('chai').expect;
-const ZncParser = require('../../src/parsers/znc.js');
+const ZncParser = require('../../../src/parsers/znc.js');
 
-describe('Parsing a line with no context', function() {
+describe('Parsing a line with no context', () => {
     describe('Parsing a message', () => {
-        it('Ordinary message', function() {
+        it('Ordinary message', () => {
             expect(new ZncParser().parseLine('[01:23:45] <Dinnerbone> Hello world! :)')).to.deep.equal({
                 type: 'message',
                 time: '01:23:45',
@@ -12,7 +12,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty message', function() {
+        it('Empty message', () => {
             expect(new ZncParser().parseLine('[01:23:45] <Dinnerbone> ')).to.deep.equal({
                 type: 'message',
                 time: '01:23:45',
@@ -23,7 +23,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing an action', () => {
-        it('Ordinary action', function() {
+        it('Ordinary action', () => {
             expect(new ZncParser().parseLine('[01:23:45] * Dinnerbone does an action.')).to.deep.equal({
                 type: 'action',
                 time: '01:23:45',
@@ -32,7 +32,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty action', function() {
+        it('Empty action', () => {
             expect(new ZncParser().parseLine('[01:23:45] * Dinnerbone ')).to.deep.equal({
                 type: 'action',
                 time: '01:23:45',
@@ -42,7 +42,7 @@ describe('Parsing a line with no context', function() {
         });
     });
 
-    it('Parsing a join', function() {
+    it('Parsing a join', () => {
         expect(new ZncParser().parseLine('[01:23:45] *** Joins: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com)')).to.deep.equal({
             type: 'join',
             time: '01:23:45',
@@ -53,7 +53,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing a kick', () => {
-        it('Ordinary kick', function() {
+        it('Ordinary kick', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Troll was kicked by Dinnerbone (You suck!)')).to.deep.equal({
                 type: 'kick',
                 time: '01:23:45',
@@ -63,7 +63,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty message', function() {
+        it('Empty message', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Troll was kicked by Dinnerbone ( )')).to.deep.equal({
                 type: 'kick',
                 time: '01:23:45',
@@ -75,7 +75,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing a mode change', () => {
-        it('Adding a single mode', function() {
+        it('Adding a single mode', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +m')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -88,7 +88,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Adding a single parameter mode', function() {
+        it('Adding a single parameter mode', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +v somebody')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -101,7 +101,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Adding multiple modes', function() {
+        it('Adding multiple modes', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +vmv somebody else')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -114,7 +114,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Removing a single mode', function() {
+        it('Removing a single mode', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: -m')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -127,7 +127,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Removing a single parameter mode', function() {
+        it('Removing a single parameter mode', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +v somebody')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -140,7 +140,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Removing multiple modes', function() {
+        it('Removing multiple modes', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: -vmv somebody else')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -153,7 +153,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Adding and removing multiple modes', function() {
+        it('Adding and removing multiple modes', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: -v+mv-o somebody else Dinnerbone')).to.deep.equal({
                 type: 'mode',
                 time: '01:23:45',
@@ -167,7 +167,7 @@ describe('Parsing a line with no context', function() {
         });
     });
 
-    it('Parsing a name change', function() {
+    it('Parsing a name change', () => {
         expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone is now known as Djinnibone')).to.deep.equal({
             type: 'nick',
             time: '01:23:45',
@@ -177,7 +177,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing a notice', () => {
-        it('Ordinary notice', function() {
+        it('Ordinary notice', () => {
             expect(new ZncParser().parseLine('[01:23:45] -Dinnerbone- Hello world! :)')).to.deep.equal({
                 type: 'notice',
                 time: '01:23:45',
@@ -186,7 +186,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty notice', function() {
+        it('Empty notice', () => {
             expect(new ZncParser().parseLine('[01:23:45] -Dinnerbone- ')).to.deep.equal({
                 type: 'notice',
                 time: '01:23:45',
@@ -197,7 +197,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing a part', () => {
-        it('Ordinary part', function() {
+        it('Ordinary part', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Parts: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) (Goodbye cruel world!)')).to.deep.equal({
                 type: 'part',
                 time: '01:23:45',
@@ -208,7 +208,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty message', function() {
+        it('Empty message', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Parts: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) ()')).to.deep.equal({
                 type: 'part',
                 time: '01:23:45',
@@ -221,7 +221,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing a quit', () => {
-        it('Ordinary quit', function() {
+        it('Ordinary quit', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Quits: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) (Goodbye cruel world!)')).to.deep.equal({
                 type: 'quit',
                 time: '01:23:45',
@@ -232,7 +232,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty message', function() {
+        it('Empty message', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Quits: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) ()')).to.deep.equal({
                 type: 'quit',
                 time: '01:23:45',
@@ -245,7 +245,7 @@ describe('Parsing a line with no context', function() {
     });
 
     describe('Parsing a topic change', () => {
-        it('Ordinary topic', function() {
+        it('Ordinary topic', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone changes topic to \'Hello world!\'')).to.deep.equal({
                 type: 'topic',
                 time: '01:23:45',
@@ -254,7 +254,7 @@ describe('Parsing a line with no context', function() {
             });
         });
 
-        it('Empty topic', function() {
+        it('Empty topic', () => {
             expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone changes topic to \'\'')).to.deep.equal({
                 type: 'topic',
                 time: '01:23:45',
