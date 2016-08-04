@@ -7,7 +7,7 @@ class ZncParser {
         };
         this.patterns = [
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\* (?<nick>\\S+)(?: (?<action>.*)|)$', subs),
+                pattern: XRegExp.build('^\\[({{time}})\\] \\* (?<nick>\\S+) (?<action>.*)$', subs),
                 result: match => ({
                     type: 'action',
                     time: match.time,
@@ -16,7 +16,7 @@ class ZncParser {
                 }),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] <(?<nick>[^>]+)>(?: (?<message>.*)|)$', subs),
+                pattern: XRegExp.build('^\\[({{time}})\\] <(?<nick>[^>]+)> (?<message>.*)$', subs),
                 result: match => ({
                     type: 'message',
                     time: match.time,
