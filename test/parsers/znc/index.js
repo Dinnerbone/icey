@@ -1,266 +1,220 @@
 const expect = require('chai').expect;
-const ZncParser = require('../../../src/parsers/znc.js');
+const {ZncParser} = require('../../../src/parsers/znc');
+const {Channel} = require('../../../src/channel');
 
-describe('Parsing a line with no context', () => {
+describe('Parsing a line', () => {
     describe('Parsing a message', () => {
         it('Ordinary message', () => {
-            expect(new ZncParser().parseLine('[01:23:45] <Dinnerbone> Hello world! :)')).to.deep.equal({
-                type: 'message',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                message: 'Hello world! :)',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] <Dinnerbone> Hello world! :)')).to.deep.equal(
+                new Channel.Events.Message('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, 'Hello world! :)')
+            );
         });
 
         it('Empty message', () => {
-            expect(new ZncParser().parseLine('[01:23:45] <Dinnerbone> ')).to.deep.equal({
-                type: 'message',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                message: '',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] <Dinnerbone>  ')).to.deep.equal(
+                new Channel.Events.Message('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, ' ')
+            );
         });
     });
 
     describe('Parsing an action', () => {
         it('Ordinary action', () => {
-            expect(new ZncParser().parseLine('[01:23:45] * Dinnerbone does an action.')).to.deep.equal({
-                type: 'action',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                action: 'does an action.',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] * Dinnerbone does an action')).to.deep.equal(
+                new Channel.Events.Action('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, 'does an action')
+            );
         });
 
         it('Empty action', () => {
-            expect(new ZncParser().parseLine('[01:23:45] * Dinnerbone ')).to.deep.equal({
-                type: 'action',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                action: '',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] * Dinnerbone ')).to.deep.equal(
+                new Channel.Events.Action('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, '')
+            );
         });
     });
 
     it('Parsing a join', () => {
-        expect(new ZncParser().parseLine('[01:23:45] *** Joins: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com)')).to.deep.equal({
-            type: 'join',
-            time: '01:23:45',
-            nick: 'Dinnerbone',
-            ident: 'dinnerbone',
-            host: 'i.like.butts.and.my.name.is.dinnerbone.com',
-        });
+        expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Joins: Dinnerbone (dinnerbone@dinnerbone.com)')).to.deep.equal(
+            new Channel.Events.Join('2001-01-01 01:23:45', {
+                nick: 'Dinnerbone',
+                ident: 'dinnerbone',
+                host: 'dinnerbone.com',
+            })
+        );
     });
 
     describe('Parsing a kick', () => {
         it('Ordinary kick', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Troll was kicked by Dinnerbone (You suck!)')).to.deep.equal({
-                type: 'kick',
-                time: '01:23:45',
-                kickerNick: 'Dinnerbone',
-                nick: 'Troll',
-                message: 'You suck!',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Troll was kicked by Dinnerbone (You suck!)')).to.deep.equal(
+                new Channel.Events.Kick('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, {nick: 'Troll'}, 'You suck!')
+            );
         });
 
         it('Empty message', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Troll was kicked by Dinnerbone ( )')).to.deep.equal({
-                type: 'kick',
-                time: '01:23:45',
-                kickerNick: 'Dinnerbone',
-                nick: 'Troll',
-                message: ' ',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Troll was kicked by Dinnerbone ( )')).to.deep.equal(
+                new Channel.Events.Kick('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, {nick: 'Troll'}, ' ')
+            );
         });
     });
 
     describe('Parsing a mode change', () => {
         it('Adding a single mode', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +m')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: ['m'],
-                    removed: [],
-                    params: [],
-                },
-            });
-        });
-
-        it('Adding a single parameter mode', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +v somebody')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: ['v'],
-                    removed: [],
-                    params: ['somebody'],
-                },
-            });
-        });
-
-        it('Adding multiple modes', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +vmv somebody else')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: ['v', 'm', 'v'],
-                    removed: [],
-                    params: ['somebody', 'else'],
-                },
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone sets mode: +m')).to.deep.equal(
+                new Channel.Events.Mode('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, '+m')
+            );
         });
 
         it('Removing a single mode', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: -m')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: [],
-                    removed: ['m'],
-                    params: [],
-                },
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone sets mode: -m')).to.deep.equal(
+                new Channel.Events.Mode('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, '-m')
+            );
         });
 
-        it('Removing a single parameter mode', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: +v somebody')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: ['v'],
-                    removed: [],
-                    params: ['somebody'],
-                },
-            });
+        it('Adding a single mode with parameter', () => {
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone sets mode: +v voice')).to.deep.equal(
+                new Channel.Events.Mode('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, '+v voice')
+            );
         });
 
-        it('Removing multiple modes', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: -vmv somebody else')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: [],
-                    removed: ['v', 'm', 'v'],
-                    params: ['somebody', 'else'],
-                },
-            });
-        });
-
-        it('Adding and removing multiple modes', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone sets mode: -v+mv-o somebody else Dinnerbone')).to.deep.equal({
-                type: 'mode',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                modes: {
-                    added: ['m', 'v'],
-                    removed: ['v', 'o'],
-                    params: ['somebody', 'else', 'Dinnerbone'],
-                },
-            });
+        it('Adding and removing multiple modes with parameters', () => {
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone sets mode: +vm-oS+k voice op key')).to.deep.equal(
+                new Channel.Events.Mode('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, '+vm-oS+k voice op key')
+            );
         });
     });
 
     it('Parsing a name change', () => {
-        expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone is now known as Djinnibone')).to.deep.equal({
-            type: 'nick',
-            time: '01:23:45',
-            nick: 'Dinnerbone',
-            newNick: 'Djinnibone',
-        });
+        expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone is now known as Djinnibone')).to.deep.equal(
+            new Channel.Events.Nick('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, 'Djinnibone')
+        );
     });
 
     describe('Parsing a notice', () => {
         it('Ordinary notice', () => {
-            expect(new ZncParser().parseLine('[01:23:45] -Dinnerbone- Hello world! :)')).to.deep.equal({
-                type: 'notice',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                message: 'Hello world! :)',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] -Dinnerbone- Hey, listen!')).to.deep.equal(
+                new Channel.Events.Notice('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, 'Hey, listen!')
+            );
         });
 
         it('Empty notice', () => {
-            expect(new ZncParser().parseLine('[01:23:45] -Dinnerbone- ')).to.deep.equal({
-                type: 'notice',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                message: '',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] -Dinnerbone-  ')).to.deep.equal(
+                new Channel.Events.Notice('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, ' ')
+            );
         });
     });
 
     describe('Parsing a part', () => {
         it('Ordinary part', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Parts: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) (Goodbye cruel world!)')).to.deep.equal({
-                type: 'part',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                ident: 'dinnerbone',
-                host: 'i.like.butts.and.my.name.is.dinnerbone.com',
-                message: 'Goodbye cruel world!',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Parts: Dinnerbone (dinnerbone@dinnerbone.com) (Goodbye, cruel channel!)')).to.deep.equal(
+                new Channel.Events.Part('2001-01-01 01:23:45', {
+                    nick: 'Dinnerbone',
+                    ident: 'dinnerbone',
+                    host: 'dinnerbone.com',
+                }, 'Goodbye, cruel channel!')
+            );
         });
 
         it('Empty message', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Parts: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) ()')).to.deep.equal({
-                type: 'part',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                ident: 'dinnerbone',
-                host: 'i.like.butts.and.my.name.is.dinnerbone.com',
-                message: '',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Parts: Dinnerbone (dinnerbone@dinnerbone.com) ()')).to.deep.equal(
+                new Channel.Events.Part('2001-01-01 01:23:45', {
+                    nick: 'Dinnerbone',
+                    ident: 'dinnerbone',
+                    host: 'dinnerbone.com',
+                }, '')
+            );
         });
     });
 
     describe('Parsing a quit', () => {
-        it('Ordinary quit', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Quits: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) (Goodbye cruel world!)')).to.deep.equal({
-                type: 'quit',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                ident: 'dinnerbone',
-                host: 'i.like.butts.and.my.name.is.dinnerbone.com',
-                message: 'Goodbye cruel world!',
-            });
+        it('Ordinary part', () => {
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Quits: Dinnerbone (dinnerbone@dinnerbone.com) (Goodbye, cruel network!)')).to.deep.equal(
+                new Channel.Events.Quit('2001-01-01 01:23:45', {
+                    nick: 'Dinnerbone',
+                    ident: 'dinnerbone',
+                    host: 'dinnerbone.com',
+                }, 'Goodbye, cruel network!')
+            );
         });
 
         it('Empty message', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Quits: Dinnerbone (dinnerbone@i.like.butts.and.my.name.is.dinnerbone.com) ()')).to.deep.equal({
-                type: 'quit',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                ident: 'dinnerbone',
-                host: 'i.like.butts.and.my.name.is.dinnerbone.com',
-                message: '',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Quits: Dinnerbone (dinnerbone@dinnerbone.com) ()')).to.deep.equal(
+                new Channel.Events.Quit('2001-01-01 01:23:45', {
+                    nick: 'Dinnerbone',
+                    ident: 'dinnerbone',
+                    host: 'dinnerbone.com',
+                }, '')
+            );
         });
     });
 
     describe('Parsing a topic change', () => {
         it('Ordinary topic', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone changes topic to \'Hello world!\'')).to.deep.equal({
-                type: 'topic',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                topic: 'Hello world!',
-            });
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone changes topic to \'It\'s a channel about nothing!\'')).to.deep.equal(
+                new Channel.Events.Topic('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, 'It\'s a channel about nothing!')
+            );
         });
 
-        it('Empty topic', () => {
-            expect(new ZncParser().parseLine('[01:23:45] *** Dinnerbone changes topic to \'\'')).to.deep.equal({
-                type: 'topic',
-                time: '01:23:45',
-                nick: 'Dinnerbone',
-                topic: '',
-            });
+        it('Empty message', () => {
+            expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Dinnerbone changes topic to \'\'')).to.deep.equal(
+                new Channel.Events.Topic('2001-01-01 01:23:45', {nick: 'Dinnerbone'}, '')
+            );
         });
     });
 });
+
+// describe('Parsing a file with no extra context', () => {
+//     it('Standard log file', () => new ZncParser()
+//         .parseFile(`${__dirname}/fixtures/#simple_sessions/2010-01-01.log`)
+//         .then(results => {
+//             expect(results).to.have.property('lines')
+//                 .that.is.an('array')
+//                 .that.deep.equals([
+//                     {
+//                         actor: {
+//                             host: 'dinnerbone.com',
+//                             ident: 'dinnerbone',
+//                             nick: 'Dinnerbone',
+//                         },
+//                         time: '00:00:00',
+//                         type: 'join',
+//                     },
+//                     {
+//                         modes: {
+//                             added: ['o'],
+//                             params: ['Dinnerbone'],
+//                             removed: [],
+//                         },
+//                         actor: {
+//                             nick: 'ChanServ',
+//                         },
+//                         time: '00:01:00',
+//                         type: 'mode',
+//                     },
+//                     {
+//                         message: 'Hello world! :)',
+//                         actor: {
+//                             nick: 'Dinnerbone',
+//                         },
+//                         time: '00:02:00',
+//                         type: 'message',
+//                     },
+//                     {
+//                         actor: {
+//                             nick: 'Dinnerbone',
+//                         },
+//                         time: '00:03:00',
+//                         topic: 'Hot Topic!',
+//                         type: 'topic',
+//                     },
+//                     {
+//                         actor: {
+//                             host: 'dinnerbone.com',
+//                             ident: 'dinnerbone',
+//                             nick: 'Dinnerbone',
+//                         },
+//                         message: 'Goodbye, world!',
+//                         time: '00:04:00',
+//                         type: 'quit',
+//                     },
+//                 ]);
+//         })
+//     );
+// });

@@ -1,139 +1,82 @@
 const XRegExp = require('xregexp');
+const fs = require('mz/fs');
+const es = require('event-stream');
+const {Channel} = require('../channel');
 
 class ZncParser {
     constructor() {
         const subs = {
-            time: XRegExp('\\d{2}:\\d{2}:\\d{2}'),
+            time: XRegExp('\\[(?<time>\\d{2}:\\d{2}:\\d{2})\\]'),
+            hostmask: XRegExp('\\((?<ident>\\S+)@(?<host>\\S+)\\)'),
+            system: XRegExp.escape('***'),
         };
         this.patterns = [
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\* (?<nick>\\S+) (?<action>.*)$', subs),
-                result: match => ({
-                    type: 'action',
-                    time: match.time,
-                    nick: match.nick,
-                    action: match.action,
-                }),
+                pattern: XRegExp.build('^{{time}} \\* (?<nick>\\S+) (?<action>.*)$', subs),
+                result: (match, date) => new Channel.Events.Action( `${date} ${match.time}`, {nick: match.nick}, match.action),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] <(?<nick>[^>]+)> (?<message>.*)$', subs),
-                result: match => ({
-                    type: 'message',
-                    time: match.time,
-                    nick: match.nick,
-                    message: match.message,
-                }),
+                pattern: XRegExp.build('^{{time}} <(?<nick>[^>]+)> (?<message>.*)$', subs),
+                result: (match, date) => new Channel.Events.Message(`${date} ${match.time}`, {nick: match.nick}, match.message),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\*\\*\\* Joins: (?<nick>\\S+) \\((?<ident>\\S+)@(?<host>\\S+)\\)$', subs),
-                result: match => ({
-                    type: 'join',
-                    time: match.time,
-                    nick: match.nick,
-                    ident: match.ident,
-                    host: match.host,
-                }),
+                pattern: XRegExp.build('^{{time}} {{system}} Joins: (?<nick>\\S+) {{hostmask}}$', subs),
+                result: (match, date) => new Channel.Events.Join(`${date} ${match.time}`, {nick: match.nick, ident: match.ident, host: match.host }),
             },
             {
-                pattern: XRegExp.build('\\[({{time}})\\] \\*\\*\\* (?<nick>\\S+) was kicked by (?<kickerNick>\\S+) \\((?<message>.+)\\)', subs),
-                result: match => ({
-                    type: 'kick',
-                    time: match.time,
-                    nick: match.nick,
-                    kickerNick: match.kickerNick,
-                    message: match.message,
-                }),
+                pattern: XRegExp.build('{{time}} {{system}} (?<victimNick>\\S+) was kicked by (?<nick>\\S+) \\((?<message>.+)\\)$', subs),
+                result: (match, date) => new Channel.Events.Kick(`${date} ${match.time}`, {nick: match.nick }, {nick: match.victimNick }, match.message),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\*\\*\\* (?<nick>\\S+) sets mode: (?<modes>.+)$', subs),
-                result: match => ({
-                    type: 'mode',
-                    time: match.time,
-                    nick: match.nick,
-                    modes: this.parseModeChanges(match.modes),
-                }),
+                pattern: XRegExp.build('^{{time}} {{system}} (?<nick>\\S+) sets mode: (?<modes>.+)$', subs),
+                result: (match, date) => new Channel.Events.Mode(`${date} ${match.time}`, {nick: match.nick }, match.modes),
             },
             {
-                pattern: XRegExp.build('\\[({{time}})\\] \\*\\*\\* (?<nick>\\S+) is now known as (?<newNick>\\S+)', subs),
-                result: match => ({
-                    type: 'nick',
-                    time: match.time,
-                    nick: match.nick,
-                    newNick: match.newNick,
-                }),
+                pattern: XRegExp.build('{{time}} {{system}} (?<nick>\\S+) is now known as (?<newNick>\\S+)$', subs),
+                result: (match, date) => new Channel.Events.Nick(`${date} ${match.time}`, {nick: match.nick }, match.newNick),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] -(?<nick>[^-]+)- (?<message>.*)$', subs),
-                result: match => ({
-                    type: 'notice',
-                    time: match.time,
-                    nick: match.nick,
-                    message: match.message,
-                }),
+                pattern: XRegExp.build('^{{time}} -(?<nick>[^-]+)- (?<message>.*)$', subs),
+                result: (match, date) => new Channel.Events.Notice(`${date} ${match.time}`, {nick: match.nick }, match.message),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\*\\*\\* Parts: (?<nick>\\S+) \\((?<ident>\\S+)@(?<host>\\S+)\\) \\((?<message>.*)\\)$', subs),
-                result: match => ({
-                    type: 'part',
-                    time: match.time,
-                    nick: match.nick,
-                    ident: match.ident,
-                    host: match.host,
-                    message: match.message,
-                }),
+                pattern: XRegExp.build('^{{time}} {{system}} Parts: (?<nick>\\S+) {{hostmask}} \\((?<message>.*)\\)$', subs),
+                result: (match, date) => new Channel.Events.Part(`${date} ${match.time}`, {nick: match.nick, ident: match.ident, host: match.host }, match.message),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\*\\*\\* Quits: (?<nick>\\S+) \\((?<ident>\\S+)@(?<host>\\S+)\\) \\((?<message>.*)\\)$', subs),
-                result: match => ({
-                    type: 'quit',
-                    time: match.time,
-                    nick: match.nick,
-                    ident: match.ident,
-                    host: match.host,
-                    message: match.message,
-                }),
+                pattern: XRegExp.build('^{{time}} {{system}} Quits: (?<nick>\\S+) {{hostmask}} \\((?<message>.*)\\)$', subs),
+                result: (match, date) => new Channel.Events.Quit(`${date} ${match.time}`, {nick: match.nick, ident: match.ident, host: match.host }, match.message),
             },
             {
-                pattern: XRegExp.build('^\\[({{time}})\\] \\*\\*\\* (?<nick>\\S+) changes topic to \'(?<topic>.*)\'$', subs),
-                result: match => ({
-                    type: 'topic',
-                    time: match.time,
-                    nick: match.nick,
-                    topic: match.topic,
-                }),
+                pattern: XRegExp.build('^{{time}} {{system}} (?<nick>\\S+) changes topic to \'(?<topic>.*)\'$', subs),
+                result: (match, date) => new Channel.Events.Topic(`${date} ${match.time}`, {nick: match.nick }, match.topic),
             },
         ];
     }
 
-    parseModeChanges(message) {
-        const split = message.split(' ');
-        const modes = split[0];
-        const params = split.length > 1 ? split.splice(1) : [];
-        const result = {params, added: [], removed: []};
-        let direction = 'added';
-        for (let i = 0; i < modes.length; i++) {
-            const char = modes[i];
-            if (char === '+') {
-                direction = 'added';
-            } else if (char === '-') {
-                direction = 'removed';
-            } else {
-                result[direction].push(char);
-            }
-        }
-        return result;
-    }
-
-    parseLine(line) {
+    parseLine(date, line) {
         for (let i = 0; i < this.patterns.length; i++) {
             const entry = this.patterns[i];
             const match = XRegExp.exec(line, entry.pattern);
             if (match) {
-                return entry.result(match);
+                return entry.result(match, date);
             }
         }
         return null;
     }
+
+    parseFile(filename) {
+        return new Promise((resolve, reject) => {
+            const lines = [];
+            fs.createReadStream(filename)
+                .pipe(es.split())
+                .pipe(es.mapSync(line => lines.push(this.parseLine(line))))
+                .on('error', error => reject(error))
+                .on('end', () => {
+                    resolve({lines});
+                });
+        });
+    }
 }
 
-module.exports = ZncParser;
+module.exports = {ZncParser};

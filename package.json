@@ -20,9 +20,14 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^3.2.2",
-    "mocha": "^3.0.0"
+    "mocha": "^3.0.0",
+    "sinon": "^1.17.5",
+    "sinon-chai": "^2.8.0"
   },
   "dependencies": {
+    "event-stream": "^3.3.4",
+    "momentjs": "^1.1.14",
+    "mz": "^2.4.0",
     "xregexp": "^3.1.1"
   }
 }
