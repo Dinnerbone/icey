@@ -332,6 +332,59 @@ describe('Channel', () => {
         });
     });
 
+    describe('#updateModes(instructions)', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.setAvailableModes('b', 'k', 'j', 'm', 'vo');
+        });
+
+        it('sets as default', () => {
+            const setMode = sinon.spy(channel, 'setMode');
+            channel.updateModes('m');
+            expect(setMode).to.have.been.calledOnce.and.calledWithExactly('m', undefined);
+        });
+
+        it('sets when explicit', () => {
+            const setMode = sinon.spy(channel, 'setMode');
+            channel.updateModes('+m');
+            expect(setMode).to.have.been.calledOnce.and.calledWithExactly('m', undefined);
+        });
+
+        it('unsets when explicit', () => {
+            const unsetMode = sinon.spy(channel, 'unsetMode');
+            channel.updateModes('-m');
+            expect(unsetMode).to.have.been.calledOnce.and.calledWithExactly('m', undefined);
+        });
+
+        it('ignores extra params', () => {
+            const setMode = sinon.spy(channel, 'setMode');
+            channel.updateModes('m param');
+            expect(setMode).to.have.been.calledOnce.and.calledWithExactly('m', undefined);
+        });
+
+        it('parses in correct order', () => {
+            const setMode = sinon.spy(channel, 'setMode');
+            const unsetMode = sinon.spy(channel, 'unsetMode');
+            channel.updateModes('bo-jk+mv ban op key voice');
+            expect(setMode).to.have.callCount(4);
+            expect(unsetMode).to.have.callCount(2);
+
+            expect(setMode.getCall(0)).to.have.been.calledWithExactly('b', 'ban');
+            expect(setMode.getCall(1)).to.have.been.calledWithExactly('o', 'op');
+            expect(unsetMode.getCall(0)).to.have.been.calledWithExactly('j', undefined);
+            expect(unsetMode.getCall(1)).to.have.been.calledWithExactly('k', 'key');
+            expect(setMode.getCall(2)).to.have.been.calledWithExactly('m', undefined);
+            expect(setMode.getCall(3)).to.have.been.calledWithExactly('v', 'voice');
+
+            expect(setMode.callIds[0]).to.be.below(setMode.callIds[1]);
+            expect(setMode.callIds[1]).to.be.below(unsetMode.callIds[0]);
+            expect(unsetMode.callIds[1]).to.be.below(setMode.callIds[2]);
+            expect(setMode.callIds[2]).to.be.below(setMode.callIds[3]);
+        });
+    });
+
     describe('#setMode(mode, param)', () => {
         let channel;
 

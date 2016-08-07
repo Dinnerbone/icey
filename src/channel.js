@@ -143,7 +143,28 @@ class Channel {
     }
 
     updateModes(instructions) {
-        // TODO + TESTS
+        const params = instructions.split(' ');
+        const modes = params.splice(0, 1)[0].split('');
+        let adding = true;
+
+        modes.forEach(mode => {
+            if (mode === '+') {
+                adding = true;
+            } else if (mode === '-') {
+                adding = false;
+            } else {
+                const type = this.availableModes[mode];
+                let param = undefined;
+                if (type === 'list' || type === 'param' || (type === 'partial' && adding) || type === 'user') {
+                    param = params.shift();
+                }
+                if (adding) {
+                    this.setMode(mode, param);
+                } else {
+                    this.unsetMode(mode, param);
+                }
+            }
+        });
     }
 
     setMode(mode, param) {
