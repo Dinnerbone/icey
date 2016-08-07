@@ -8,7 +8,8 @@
                 "icey.sublime-project",
                 "package.json",
                 ".eslintrc.json",
-                "README.md"
+                "README.md",
+                ".travis.yml"
             ],
             "folder_exclude_patterns": [
                 "*"
@@ -36,5 +37,12 @@
         "ESLint-Formatter": {
             "format_on_save": true
         }
-    }
+    },
+    "build_systems":
+    [
+        {
+            "name": "Test",
+            "shell_cmd": "npm test"
+        }
+    ]
 }
