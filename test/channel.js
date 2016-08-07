@@ -466,5 +466,21 @@ describe('Channel', () => {
                 expect(channel.getUserModes()).deep.equals({o: [], v: []});
             });
         });
+
+        describe('Setting an unknown mode', () => {
+            it('adds as channel mode', () => {
+                const channel = new Channel();
+                channel.setMode('x');
+                expect(channel.getChannelModes()).deep.equals({x: true});
+                expect(channel.getAvailableModes()).deep.equals({x: 'channel'});
+            });
+
+            it('ignores missing param', () => {
+                const channel = new Channel();
+                channel.setMode('x', 'hello world!');
+                expect(channel.getChannelModes()).deep.equals({x: true});
+                expect(channel.getAvailableModes()).deep.equals({x: 'channel'});
+            });
+        });
     });
 });

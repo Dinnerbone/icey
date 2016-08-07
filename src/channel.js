@@ -165,7 +165,8 @@ class Channel {
                 list.push(param);
             }
         } else {
-            // TODO
+            this.availableModes[mode] = 'channel';
+            this.channelModes[mode] = true;
         }
     }
 
