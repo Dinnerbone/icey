@@ -184,4 +184,279 @@ describe('Channel', () => {
             });
         });
     });
+
+    describe('#setAvailableModes(lists, param, semiparam, channel, user)', () => {
+        it('sets correct availability', () => {
+            const channel = new Channel();
+            channel.setAvailableModes('ab', 'cd', 'ef', 'gh', 'ij');
+            expect(channel.getLists()).deep.equals({a: [], b: []});
+            expect(channel.getChannelModes()).deep.equals({
+                c: null,
+                d: null,
+                e: null,
+                f: null,
+                g: false,
+                h: false,
+            });
+            expect(channel.getUserModes()).deep.equals({i: [], j: []});
+            expect(channel.getAvailableModes()).deep.equals({
+                a: 'list',
+                b: 'list',
+                c: 'param',
+                d: 'param',
+                e: 'partial',
+                f: 'partial',
+                g: 'channel',
+                h: 'channel',
+                i: 'user',
+                j: 'user',
+            });
+        });
+
+        it('does not allow duplicates', () => {
+            const channel = new Channel();
+            expect(() => channel.setAvailableModes('a', 'a', '', '', '')).to.throw();
+            expect(channel.getAvailableModes()).to.be.empty;
+        });
+
+        it('removes old modes but keeps existing', () => {
+            const channel = new Channel();
+            channel.setAvailableModes('ab', 'de', 'gh', 'jk', 'mn');
+            channel.setMode('b', 'one');
+            channel.setMode('e', 'two');
+            channel.setMode('h', 'three');
+            channel.setMode('k');
+            channel.setMode('n', 'four');
+            channel.setAvailableModes('bc', 'ef', 'hi', 'kl', 'no');
+            expect(channel.getLists()).deep.equals({b: ['one'], c: []});
+            expect(channel.getChannelModes()).deep.equals({
+                e: 'two',
+                f: null,
+                h: 'three',
+                i: null,
+                k: true,
+                l: false,
+            });
+            expect(channel.getUserModes()).deep.equals({n: ['four'], o: []});
+            expect(channel.getAvailableModes()).deep.equals({
+                b: 'list',
+                c: 'list',
+                e: 'param',
+                f: 'param',
+                h: 'partial',
+                i: 'partial',
+                k: 'channel',
+                l: 'channel',
+                n: 'user',
+                o: 'user',
+            });
+        });
+
+        it('allows changing a modes type', () => {
+            const channel = new Channel();
+            channel.setAvailableModes('ab', 'cd', 'ef', 'gh', 'ij');
+            channel.setAvailableModes('bc', 'de', 'fg', 'hi', 'jk');
+            expect(channel.getLists()).deep.equals({b: [], c: []});
+            expect(channel.getChannelModes()).deep.equals({
+                d: null,
+                e: null,
+                f: null,
+                g: null,
+                h: false,
+                i: false,
+            });
+            expect(channel.getUserModes()).deep.equals({j: [], k: []});
+            expect(channel.getAvailableModes()).deep.equals({
+                b: 'list',
+                c: 'list',
+                d: 'param',
+                e: 'param',
+                f: 'partial',
+                g: 'partial',
+                h: 'channel',
+                i: 'channel',
+                j: 'user',
+                k: 'user',
+            });
+        });
+    });
+
+    describe('#getList(mode)', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.setAvailableModes('bq', '', '', '', '');
+        });
+
+        it('returns only known lists', () => {
+            expect(channel.getLists()).deep.equals({b: [], q: []});
+        });
+    });
+
+    describe('#getChannelModes()', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.setAvailableModes('', 'k', 'j', 'm', '');
+        });
+
+        it('returns only known modes', () => {
+            expect(channel.getChannelModes()).to.deep.equal({
+                k: null,
+                j: null,
+                m: false,
+            });
+        });
+    });
+
+    describe('#getUserModes()', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.setAvailableModes('', '', '', '', 'ov');
+        });
+
+        it('returns only known modes', () => {
+            expect(channel.getUserModes()).deep.equals({o: [], v: []});
+        });
+    });
+
+    describe('#setMode(mode, param)', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.setAvailableModes('b', 'k', 'j', 'm', 'vo');
+        });
+
+        describe('Adding to a list', () => {
+            it('adds', () => {
+                channel.setMode('b', 'banned');
+                expect(channel.getLists()).deep.equals({b: ['banned']});
+            });
+
+            it('does not duplicate', () => {
+                channel.setMode('b', 'banned');
+                channel.setMode('b', 'also');
+                channel.setMode('b', 'banned');
+                expect(channel.getLists()).deep.equals({b: ['banned', 'also']});
+            });
+
+            it('ignores missing param', () => {
+                channel.setMode('b');
+                expect(channel.getLists()).deep.equals({b: []});
+            });
+        });
+
+        describe('Setting a channel mode with required param', () => {
+            it('sets', () => {
+                channel.setMode('k', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: null,
+                    m: false,
+                });
+            });
+
+            it('does not duplicate', () => {
+                channel.setMode('k', 'alpha');
+                channel.setMode('k', 'beta');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'beta',
+                    j: null,
+                    m: false,
+                });
+            });
+
+            it('ignores missing param', () => {
+                channel.setMode('k');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: null,
+                    m: false,
+                });
+            });
+        });
+
+        describe('Setting a channel mode with semi-required param', () => {
+            it('sets', () => {
+                channel.setMode('j', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: 'param',
+                    m: false,
+                });
+            });
+
+            it('does not duplicate', () => {
+                channel.setMode('j', 'alpha');
+                channel.setMode('j', 'beta');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: 'beta',
+                    m: false,
+                });
+            });
+
+            it('ignores missing param', () => {
+                channel.setMode('j');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: null,
+                    m: false,
+                });
+            });
+        });
+
+        describe('Setting a channel mode without param', () => {
+            it('sets', () => {
+                channel.setMode('m');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: null,
+                    m: true,
+                });
+            });
+
+            it('does not duplicate', () => {
+                channel.setMode('m');
+                channel.setMode('m');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: null,
+                    m: true,
+                });
+            });
+
+            it('ignores param', () => {
+                channel.setMode('m', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: null,
+                    m: true,
+                });
+            });
+        });
+
+        describe('Setting a user mode', () => {
+            it('sets', () => {
+                channel.setMode('o', 'Dinnerbone');
+                expect(channel.getUserModes()).deep.equals({o: ['Dinnerbone'], v: []});
+            });
+
+            it('does not duplicate', () => {
+                channel.setMode('v', 'Dinnerbone');
+                channel.setMode('v', 'Dinnerbone');
+                expect(channel.getUserModes()).deep.equals({o: [], v: ['Dinnerbone']});
+            });
+
+            it('ignores missing param', () => {
+                channel.setMode('o');
+                expect(channel.getUserModes()).deep.equals({o: [], v: []});
+            });
+        });
+    });
 });
