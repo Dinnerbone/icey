@@ -185,6 +185,14 @@ describe('Channel', () => {
         });
     });
 
+    describe('#updateTopic(topic)', () => {
+        it('sets the topic', () => {
+            const channel = new Channel();
+            channel.updateTopic('Hello world!');
+            expect(channel.topic).to.equal('Hello world!');
+        });
+    });
+
     describe('#setAvailableModes(lists, param, semiparam, channel, user)', () => {
         it('sets correct availability', () => {
             const channel = new Channel();

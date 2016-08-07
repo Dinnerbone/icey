@@ -170,7 +170,7 @@ class Channel {
     }
 
     updateTopic(topic) {
-        // TODO
+        this.topic = topic;
     }
 
     setAvailableModes(list, param, partial, channel, user) {
