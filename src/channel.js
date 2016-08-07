@@ -170,6 +170,34 @@ class Channel {
         }
     }
 
+    unsetMode(mode, param) {
+        const type = this.availableModes[mode];
+        if (type === 'list') {
+            const list = this.lists[mode];
+            if (typeof param === 'string' && param.length > 0) {
+                const index = list.indexOf(param);
+                if (index > -1) list.splice(index, 1);
+            }
+        } else if (type === 'param') {
+            if (typeof param === 'string' && param.length > 0) {
+                this.channelModes[mode] = null;
+            }
+        } else if (type === 'partial') {
+            this.channelModes[mode] = null;
+        } else if (type === 'channel') {
+            this.channelModes[mode] = false;
+        } else if (type === 'user') {
+            const list = this.userModes[mode];
+            if (typeof param === 'string' && param.length > 0) {
+                const index = list.indexOf(param);
+                if (index > -1) list.splice(index, 1);
+            }
+        } else {
+            this.availableModes[mode] = 'channel';
+            this.channelModes[mode] = false;
+        }
+    }
+
     updateTopic(topic) {
         this.topic = topic;
     }

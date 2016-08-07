@@ -469,16 +469,175 @@ describe('Channel', () => {
 
         describe('Setting an unknown mode', () => {
             it('adds as channel mode', () => {
-                const channel = new Channel();
+                channel = new Channel();
                 channel.setMode('x');
                 expect(channel.getChannelModes()).deep.equals({x: true});
                 expect(channel.getAvailableModes()).deep.equals({x: 'channel'});
             });
 
             it('ignores missing param', () => {
-                const channel = new Channel();
+                channel = new Channel();
                 channel.setMode('x', 'hello world!');
                 expect(channel.getChannelModes()).deep.equals({x: true});
+                expect(channel.getAvailableModes()).deep.equals({x: 'channel'});
+            });
+        });
+    });
+
+    describe('#unsetMode(mode, param)', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.setAvailableModes('b', 'k', 'j', 'm', 'vo');
+            channel.setMode('b', 'banned');
+            channel.setMode('k', 'param');
+            channel.setMode('j', 'param');
+            channel.setMode('m');
+            channel.setMode('o', 'Dinnerbone');
+        });
+
+        describe('Removing from a list', () => {
+            it('removes existing values', () => {
+                channel.unsetMode('b', 'banned');
+                expect(channel.getLists()).deep.equals({b: []});
+            });
+
+            it('only changes one entry', () => {
+                channel.setMode('b', 'other');
+                channel.unsetMode('b', 'banned');
+                expect(channel.getLists()).deep.equals({b: ['other']});
+            });
+
+            it('ignores nonexistent values', () => {
+                channel.unsetMode('b', 'nobody');
+                expect(channel.getLists()).deep.equals({b: ['banned']});
+            });
+
+            it('ignores missing param', () => {
+                channel.unsetMode('b');
+                expect(channel.getLists()).deep.equals({b: ['banned']});
+            });
+        });
+
+        describe('Unsetting a channel mode with required param', () => {
+            it('unsets', () => {
+                channel.unsetMode('k', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: 'param',
+                    m: true,
+                });
+            });
+
+            it('unsets even if not set', () => {
+                channel.unsetMode('k', 'param');
+                channel.unsetMode('k', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: null,
+                    j: 'param',
+                    m: true,
+                });
+            });
+
+            it('ignores missing param', () => {
+                channel.unsetMode('k');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: 'param',
+                    m: true,
+                });
+            });
+        });
+
+        describe('Unsetting a channel mode with semi-required param', () => {
+            it('unsets without param', () => {
+                channel.unsetMode('j');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: null,
+                    m: true,
+                });
+            });
+
+            it('unsets even if not set', () => {
+                channel.unsetMode('j');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: null,
+                    m: true,
+                });
+            });
+
+            it('ignores param', () => {
+                channel.unsetMode('j', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: null,
+                    m: true,
+                });
+            });
+        });
+
+        describe('Unsetting a channel mode without param', () => {
+            it('sets', () => {
+                channel.unsetMode('m');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: 'param',
+                    m: false,
+                });
+            });
+
+            it('unsets even if not set', () => {
+                channel.unsetMode('m');
+                channel.unsetMode('m');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: 'param',
+                    m: false,
+                });
+            });
+
+            it('ignores param', () => {
+                channel.unsetMode('m', 'param');
+                expect(channel.getChannelModes()).deep.equals({
+                    k: 'param',
+                    j: 'param',
+                    m: false,
+                });
+            });
+        });
+
+        describe('Unsetting a user mode', () => {
+            it('unsets known value', () => {
+                channel.unsetMode('o', 'Dinnerbone');
+                expect(channel.getUserModes()).deep.equals({o: [], v: []});
+            });
+
+            it('ignores unknown value', () => {
+                channel.unsetMode('o', 'Nobody');
+                expect(channel.getUserModes()).deep.equals({o: ['Dinnerbone'], v: []});
+            });
+
+            it('ignores missing param', () => {
+                channel.unsetMode('o');
+                expect(channel.getUserModes()).deep.equals({o: ['Dinnerbone'], v: []});
+            });
+        });
+
+        describe('Unsetting an unknown mode', () => {
+            it('adds as channel mode', () => {
+                channel = new Channel();
+                channel.unsetMode('x');
+                expect(channel.getChannelModes()).deep.equals({x: false});
+                expect(channel.getAvailableModes()).deep.equals({x: 'channel'});
+            });
+
+            it('ignores missing param', () => {
+                channel = new Channel();
+                channel.unsetMode('x', 'hello world!');
+                expect(channel.getChannelModes()).deep.equals({x: false});
                 expect(channel.getAvailableModes()).deep.equals({x: 'channel'});
             });
         });
