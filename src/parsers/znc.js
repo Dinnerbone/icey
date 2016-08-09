@@ -65,15 +65,18 @@ class ZncParser {
         return null;
     }
 
-    parseFile(filename) {
+    parseFile(date, filename) {
         return new Promise((resolve, reject) => {
             const lines = [];
             fs.createReadStream(filename)
                 .pipe(es.split())
-                .pipe(es.mapSync(line => lines.push(this.parseLine(line))))
+                .pipe(es.mapSync(line => {
+                    const event = this.parseLine(date, line);
+                    if (event) lines.push(event);
+                }))
                 .on('error', error => reject(error))
                 .on('end', () => {
-                    resolve({lines});
+                    resolve(lines);
                 });
         });
     }

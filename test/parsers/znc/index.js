@@ -169,3 +169,54 @@ describe('Parsing a line', () => {
         });
     });
 });
+
+describe('Parsing a file', () => {
+    it('transforms into events', () =>
+        new ZncParser().parseFile('2010-01-01', `${__dirname}/fixtures/#simple_sessions/2010-01-01.log`)
+            .then(events => {
+                expect(events).to.deep.equal([
+                    {
+                        author: {
+                            nick: 'Dinnerbone',
+                            user: {
+                                host: 'dinnerbone.com',
+                                ident: 'dinnerbone',
+                            },
+                        },
+                        time: '2010-01-01 00:00:00',
+                    },
+                    {
+                        author: {
+                            nick: 'ChanServ',
+                        },
+                        instructions: '+o Dinnerbone',
+                        time: '2010-01-01 00:01:00',
+                    },
+                    {
+                        author: {
+                            nick: 'Dinnerbone',
+                        },
+                        message: 'Hello world! :)',
+                        time: '2010-01-01 00:02:00',
+                    },
+                    {
+                        author: {
+                            nick: 'Dinnerbone',
+                        },
+                        time: '2010-01-01 00:03:00',
+                        topic: 'Hot Topic!',
+                    },
+                    {
+                        author: {
+                            nick: 'Dinnerbone',
+                            user: {
+                                host: 'dinnerbone.com',
+                                ident: 'dinnerbone',
+                            },
+                        },
+                        time: '2010-01-01 00:04:00',
+                    },
+                ]);
+            })
+    );
+});
