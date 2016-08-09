@@ -107,7 +107,7 @@ const Events = Object.freeze({
 
         apply(channel) {
             super.apply(channel);
-            channel.renameNick(this.nick);
+            channel.renameActor(this.author.nick, this.nick);
         }
     },
 });
@@ -139,6 +139,15 @@ class Channel {
 
     removeActor(actor) {
         delete this.actors[actor.nick];
+    }
+
+    renameActor(nick, target) {
+        if (nick in this.actors) {
+            this.actors[target] = this.actors[nick];
+            delete this.actors[nick];
+        } else {
+            this.actors[target] = {};
+        }
     }
 
     updateModes(instructions) {

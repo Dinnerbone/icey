@@ -59,8 +59,17 @@ describe('Channel Events', () => {
         });
     });
 
-    describe('NickChange', () => {
-        // TODO
+    describe('Nick', () => {
+        it('updates author & renames', () => {
+            const event = new Channel.Events.Nick('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Djinnibone');
+            const update = sinon.spy(channel, 'updateActor');
+            const rename = sinon.spy(channel, 'renameActor');
+            channel.addEvent(event);
+            expect(update).to.have.been.calledOnce.and.calledWith(event.author);
+            expect(rename).to.have.been.calledOnce.and.calledWith('Dinnerbone', 'Djinnibone');
+            expect(rename).to.have.been.calledAfter(update);
+            expect(event.author).to.have.property('user', channel.actors.Djinnibone);
+        });
     });
 
     describe('Part', () => {
@@ -190,6 +199,38 @@ describe('Channel', () => {
             expect(channel.actors).to.deep.equal({
                 Dinnerbone: {ident: 'dinnerbone'},
                 Djinnibone: {ident: 'djinnibone'},
+            });
+        });
+    });
+
+    describe('#renameActor(actor, nick)', () => {
+        let channel;
+
+        beforeEach(() => {
+            channel = new Channel();
+            channel.updateActor({nick: 'Dinnerbone', user: {ident: 'dinnerbone'}});
+        });
+
+        it('renames known actor', () => {
+            channel.renameActor('Dinnerbone', 'Djinnibone');
+            expect(channel.actors).to.deep.equal({
+                Djinnibone: {ident: 'dinnerbone'},
+            });
+        });
+
+        it('rename replaces target actor', () => {
+            channel.updateActor({nick: 'Djinnibone', user: {ident: 'djinnibone'}});
+            channel.renameActor('Dinnerbone', 'Djinnibone');
+            expect(channel.actors).to.deep.equal({
+                Djinnibone: {ident: 'dinnerbone'},
+            });
+        });
+
+        it('adds unknown actor', () => {
+            channel.renameActor('Djinnibone', 'Otherbone');
+            expect(channel.actors).to.deep.equal({
+                Dinnerbone: {ident: 'dinnerbone'},
+                Otherbone: {},
             });
         });
     });
