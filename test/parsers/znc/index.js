@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const {ZncParser} = require('../../../src/parsers/znc');
+const ZncParser = require('../../../src/parsers/znc');
 const Events = require('../../../src/events');
 
 describe('Parsing a line', () => {

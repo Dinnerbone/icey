@@ -79,4 +79,4 @@ class ZncParser {
     }
 }
 
-module.exports = {ZncParser};
+module.exports = ZncParser;
