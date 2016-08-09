@@ -19,23 +19,37 @@ describe('Channel Events', () => {
         });
     };
 
+    const checkSerialization = event => {
+        it('serializes & deserializes', () => {
+            const json = JSON.stringify(event);
+            const reconstructed = Events.fromJson(json);
+            expect(reconstructed).to.deep.equal(event);
+        });
+    };
+
     describe('Message', () => {
         checkStandardAuthorUpdate(new Events.Message('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
+        checkSerialization(new Events.Message('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
     });
 
     describe('Notice', () => {
         checkStandardAuthorUpdate(new Events.Notice('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
+        checkSerialization(new Events.Notice('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
     });
 
     describe('Action', () => {
         checkStandardAuthorUpdate(new Events.Action('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'does a thing'));
+        checkSerialization(new Events.Action('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'does a thing'));
     });
 
     describe('Join', () => {
         checkStandardAuthorUpdate(new Events.Join('2001-01-01 00:00:00', {nick: 'Dinnerbone'}));
+        checkSerialization(new Events.Join('2001-01-01 00:00:00', {nick: 'Dinnerbone'}));
     });
 
     describe('Kick', () => {
+        checkSerialization(new Events.Kick('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, {nick: 'Djinnibone'}, 'You suck!'));
+
         it('updates author & victim, then removes victim', () => {
             const event = new Events.Kick('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, {nick: 'Djinnibone'}, 'You suck!');
             const update = sinon.spy(channel, 'updateActor');
@@ -52,6 +66,7 @@ describe('Channel Events', () => {
     describe('Mode', () => {
         const event = new Events.Mode('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'vm-oS+k voice op key');
         checkStandardAuthorUpdate(event);
+        checkSerialization(event);
 
         it('updates modes', () => {
             const spy = sinon.spy(channel, 'updateModes');
@@ -61,6 +76,8 @@ describe('Channel Events', () => {
     });
 
     describe('Nick', () => {
+        checkSerialization(new Events.Nick('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Djinnibone'));
+
         it('updates author & renames', () => {
             const event = new Events.Nick('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Djinnibone');
             const update = sinon.spy(channel, 'updateActor');
@@ -74,6 +91,8 @@ describe('Channel Events', () => {
     });
 
     describe('Part', () => {
+        checkSerialization(new Events.Part('2001-01-01 00:00:00', {nick: 'Dinnerbone', user: {ident: 'dinnerbone', host: 'dinnerbone.com'}}, 'Bye!'));
+
         it('updates author then kicks author', () => {
             const event = new Events.Part('2001-01-01 00:00:00', {nick: 'Dinnerbone', user: {ident: 'dinnerbone', host: 'dinnerbone.com'}}, 'Bye!');
             const update = sinon.spy(channel, 'updateActor');
@@ -87,6 +106,8 @@ describe('Channel Events', () => {
     });
 
     describe('Quit', () => {
+        checkSerialization(new Events.Quit('2001-01-01 00:00:00', {nick: 'Dinnerbone', user: {ident: 'dinnerbone', host: 'dinnerbone.com'}}, 'Bye!'));
+
         it('updates author then kicks author', () => {
             const event = new Events.Quit('2001-01-01 00:00:00', {nick: 'Dinnerbone', user: {ident: 'dinnerbone', host: 'dinnerbone.com'}}, 'Bye!');
             const update = sinon.spy(channel, 'updateActor');
@@ -102,6 +123,7 @@ describe('Channel Events', () => {
     describe('Topic', () => {
         const event = new Events.Topic('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'A channel about nothing!');
         checkStandardAuthorUpdate(event);
+        checkSerialization(event);
 
         it('updates topic', () => {
             const spy = sinon.spy(channel, 'updateTopic');

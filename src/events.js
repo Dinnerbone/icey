@@ -6,6 +6,14 @@ class Event {
     // eslint-disable-next-line no-unused-vars
     apply(channel) {
     }
+
+    toJSON() {
+        return Object.assign({type: this.constructor.name}, this);
+    }
+
+    static Reconstruct(obj) {
+        return Object.assign(new this(), obj);
+    }
 }
 
 class SingleAuthorEvent extends Event {
@@ -21,30 +29,30 @@ class SingleAuthorEvent extends Event {
 
 const Events = Object.freeze({
     Base: Event,
-    Message: class extends SingleAuthorEvent {
+    Message: class Message extends SingleAuthorEvent {
         constructor(time, author, message) {
             super(time, author);
             this.message = message;
         }
     },
-    Notice: class extends SingleAuthorEvent {
+    Notice: class Notice extends SingleAuthorEvent {
         constructor(time, author, message) {
             super(time, author);
             this.message = message;
         }
     },
-    Action: class extends SingleAuthorEvent {
+    Action: class Action extends SingleAuthorEvent {
         constructor(time, author, action) {
             super(time, author);
             this.action = action;
         }
     },
-    Join: class extends SingleAuthorEvent {
+    Join: class Join extends SingleAuthorEvent {
         constructor(time, author) {
             super(time, author);
         }
     },
-    Kick: class extends Event {
+    Kick: class Kick extends Event {
         constructor(time, author, victim) {
             super(time);
             this.author = author;
@@ -57,7 +65,7 @@ const Events = Object.freeze({
             channel.removeActor(this.victim);
         }
     },
-    Part: class extends SingleAuthorEvent {
+    Part: class Part extends SingleAuthorEvent {
         constructor(time, author) {
             super(time, author);
         }
@@ -67,7 +75,7 @@ const Events = Object.freeze({
             channel.removeActor(this.author);
         }
     },
-    Quit: class extends SingleAuthorEvent {
+    Quit: class Quit extends SingleAuthorEvent {
         constructor(time, author) {
             super(time, author);
         }
@@ -77,7 +85,7 @@ const Events = Object.freeze({
             channel.removeActor(this.author);
         }
     },
-    Mode: class extends SingleAuthorEvent {
+    Mode: class Mode extends SingleAuthorEvent {
         constructor(time, author, instructions) {
             super(time, author, instructions);
             this.instructions = instructions;
@@ -88,7 +96,7 @@ const Events = Object.freeze({
             channel.updateModes(this.instructions);
         }
     },
-    Topic: class extends SingleAuthorEvent {
+    Topic: class Topic extends SingleAuthorEvent {
         constructor(time, author, topic) {
             super(time, author, topic);
             this.topic = topic;
@@ -99,7 +107,7 @@ const Events = Object.freeze({
             channel.updateTopic(this.topic);
         }
     },
-    Nick: class extends SingleAuthorEvent {
+    Nick: class Nick extends SingleAuthorEvent {
         constructor(time, author, nick) {
             super(time, author, nick);
             this.nick = nick;
@@ -109,6 +117,12 @@ const Events = Object.freeze({
             super.apply(channel);
             channel.renameActor(this.author.nick, this.nick);
         }
+    },
+    fromJson: function(json) {
+        if (typeof json === 'string') json = JSON.parse(json);
+        const type = json.type;
+        delete json.type;
+        return this[type].Reconstruct(json);
     },
 });
 
