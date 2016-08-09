@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const expect = chai.expect;
 const ZncParser = require('../../../src/parsers/znc');
 const Collector = require('../../../src/Collector');
-const moment = require('momentjs');
+const moment = require('moment');
 
 describe('Parsing a line', () => {
     let collector;

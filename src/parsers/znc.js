@@ -1,7 +1,7 @@
 const XRegExp = require('xregexp');
 const fs = require('mz/fs');
 const es = require('event-stream');
-const moment = require('momentjs');
+const moment = require('moment');
 
 class ZncParser {
     constructor(counter) {
