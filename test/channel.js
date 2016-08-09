@@ -9,33 +9,33 @@ describe('Channel Events', () => {
 
     beforeEach(() => channel = new Channel());
 
-    const checkStandardAuthorReplacement = event => {
-        it('replaces author', () => {
+    const checkStandardAuthorUpdate = event => {
+        it('updates author', () => {
             const spy = sinon.spy(channel, 'updateActor');
             channel.addEvent(event);
             expect(spy).to.have.been.calledOnce.and.calledWith(event.author);
-            expect(event.author).to.equal(channel.actors.Dinnerbone);
+            expect(event.author).to.have.property('user', channel.actors.Dinnerbone);
         });
     };
 
     describe('Message', () => {
-        checkStandardAuthorReplacement(new Channel.Events.Message('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
+        checkStandardAuthorUpdate(new Channel.Events.Message('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
     });
 
     describe('Notice', () => {
-        checkStandardAuthorReplacement(new Channel.Events.Notice('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
+        checkStandardAuthorUpdate(new Channel.Events.Notice('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Hello, world!'));
     });
 
     describe('Action', () => {
-        checkStandardAuthorReplacement(new Channel.Events.Action('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'does a thing'));
+        checkStandardAuthorUpdate(new Channel.Events.Action('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'does a thing'));
     });
 
     describe('Join', () => {
-        checkStandardAuthorReplacement(new Channel.Events.Join('2001-01-01 00:00:00', {nick: 'Dinnerbone'}));
+        checkStandardAuthorUpdate(new Channel.Events.Join('2001-01-01 00:00:00', {nick: 'Dinnerbone'}));
     });
 
     describe('Kick', () => {
-        it('replaces author & victim, then removes victim', () => {
+        it('updates author & victim, then removes victim', () => {
             const event = new Channel.Events.Kick('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, {nick: 'Djinnibone'}, 'You suck!');
             const update = sinon.spy(channel, 'updateActor');
             const remove = sinon.spy(channel, 'removeActor');
@@ -43,14 +43,14 @@ describe('Channel Events', () => {
             expect(update).to.have.been.calledTwice.and.calledWith(event.author).and.calledWith(event.victim);
             expect(remove).to.have.been.calledOnce.and.calledWith(event.victim);
             expect(remove).to.have.been.calledAfter(update);
-            expect(event.author).to.equal(channel.actors.Dinnerbone);
-            expect(event.victim).to.deep.equal({nick: 'Djinnibone'});
+            expect(event.author).to.have.property('user', channel.actors.Dinnerbone);
+            expect(event.victim).to.have.property('user').deep.equals({});
         });
     });
 
     describe('Mode', () => {
         const event = new Channel.Events.Mode('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'vm-oS+k voice op key');
-        checkStandardAuthorReplacement(event);
+        checkStandardAuthorUpdate(event);
 
         it('updates modes', () => {
             const spy = sinon.spy(channel, 'updateModes');
@@ -64,34 +64,34 @@ describe('Channel Events', () => {
     });
 
     describe('Part', () => {
-        it('replaces author then kicks author', () => {
-            const event = new Channel.Events.Part('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Bye!');
+        it('updates author then kicks author', () => {
+            const event = new Channel.Events.Part('2001-01-01 00:00:00', {nick: 'Dinnerbone', user: {ident: 'dinnerbone', host: 'dinnerbone.com'}}, 'Bye!');
             const update = sinon.spy(channel, 'updateActor');
             const remove = sinon.spy(channel, 'removeActor');
             channel.addEvent(event);
             expect(update).to.have.been.calledOnce.and.calledWith(event.author);
             expect(remove).to.have.been.calledOnce.and.calledWith(event.author);
             expect(remove).to.have.been.calledAfter(update);
-            expect(event.author).to.deep.equal({nick: 'Dinnerbone'});
+            expect(event.author).to.have.property('user').that.deep.equals({ident: 'dinnerbone', host: 'dinnerbone.com'});
         });
     });
 
     describe('Quit', () => {
-        it('replaces author then kicks author', () => {
-            const event = new Channel.Events.Quit('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'Bye!');
+        it('updates author then kicks author', () => {
+            const event = new Channel.Events.Quit('2001-01-01 00:00:00', {nick: 'Dinnerbone', user: {ident: 'dinnerbone', host: 'dinnerbone.com'}}, 'Bye!');
             const update = sinon.spy(channel, 'updateActor');
             const remove = sinon.spy(channel, 'removeActor');
             channel.addEvent(event);
             expect(update).to.have.been.calledOnce.and.calledWith(event.author);
             expect(remove).to.have.been.calledOnce.and.calledWith(event.author);
             expect(remove).to.have.been.calledAfter(update);
-            expect(event.author).to.deep.equal({nick: 'Dinnerbone'});
+            expect(event.author).to.have.property('user').that.deep.equals({ident: 'dinnerbone', host: 'dinnerbone.com'});
         });
     });
 
     describe('Topic', () => {
         const event = new Channel.Events.Topic('2001-01-01 00:00:00', {nick: 'Dinnerbone'}, 'A channel about nothing!');
-        checkStandardAuthorReplacement(event);
+        checkStandardAuthorUpdate(event);
 
         it('updates topic', () => {
             const spy = sinon.spy(channel, 'updateTopic');
@@ -125,38 +125,47 @@ describe('Channel', () => {
     });
 
     describe('#updateActor(actor)', () => {
-        it('adds new actor', () => {
+        it('adds new actor with no user', () => {
             const channel = new Channel();
             const actor = {nick: 'Dinnerbone'};
-            const result = channel.updateActor(actor);
-            expect(result).to.not.equal(actor);
-            expect(result).to.deep.equal(actor);
-            expect(channel.actors).to.have.property('Dinnerbone', result);
+            channel.updateActor(actor);
+            expect(actor).to.have.property('user').that.deep.equals({});
+            expect(channel.actors).to.have.property('Dinnerbone', actor.user);
         });
 
-        it('updates actor with new info', () => {
+        it('adds new actor with user info', () => {
+            const channel = new Channel();
+            const user = {ident: 'dinnerbone', host: 'dinnerbone.com'};
+            const actor = {nick: 'Dinnerbone', user};
+            channel.updateActor(actor);
+            expect(actor).to.have.property('user').that.deep.equals(user);
+            expect(channel.actors).to.have.property('Dinnerbone').that.deep.equals(user);
+        });
+
+        it('updates actor with user info', () => {
             const channel = new Channel();
             const actor = {nick: 'Dinnerbone'};
-            const actorWithIdent = {nick: 'Dinnerbone', ident: 'dinnerbone'};
-            const actorWithHost = {nick: 'Dinnerbone', host: 'dinnerbone.com'};
-            const result = channel.updateActor(actor);
-            expect(channel.updateActor(actorWithIdent)).to.equal(result);
-            expect(channel.updateActor(actorWithHost)).to.equal(result);
-            expect(result).to.deep.equal({
-                nick: 'Dinnerbone',
-                ident: 'dinnerbone',
-                host: 'dinnerbone.com',
-            });
-            expect(channel.actors).to.have.property('Dinnerbone', result);
+            const actorWithIdent = {nick: 'Dinnerbone', user: {ident: 'dinnerbone'}};
+            const actorWithHost = {nick: 'Dinnerbone', user: {host: 'dinnerbone.com'}};
+            channel.updateActor(actor);
+            channel.updateActor(actorWithIdent);
+            channel.updateActor(actorWithHost);
+            expect(actor).to.have.property('user').that.deep.equals({ident: 'dinnerbone', host: 'dinnerbone.com'});
+            const user = actor.user;
+            expect(actorWithHost).to.have.property('user', user);
+            expect(actorWithIdent).to.have.property('user', user);
+            expect(channel.actors).to.have.property('Dinnerbone', user);
         });
 
         it('allows multiple actors', () => {
             const channel = new Channel();
-            const actor1 = channel.updateActor({nick: 'Dinnerbone'});
-            const actor2 = channel.updateActor({nick: 'Djinnibone'});
-            expect(actor1).to.not.equal(actor2);
-            expect(channel.actors).to.have.property('Dinnerbone', actor1);
-            expect(channel.actors).to.have.property('Djinnibone', actor2);
+            const user1 = {ident: 'dinnerbone'};
+            const user2 = {ident: 'djinnibone'};
+            channel.updateActor({nick: 'Dinnerbone', user: user1});
+            channel.updateActor({nick: 'Djinnibone', user: user2});
+            expect(user1).to.not.equal(user2);
+            expect(channel.actors).to.have.property('Dinnerbone').that.deep.equals(user1);
+            expect(channel.actors).to.have.property('Djinnibone').that.deep.equals(user2);
         });
     });
 
@@ -165,22 +174,22 @@ describe('Channel', () => {
 
         beforeEach(() => {
             channel = new Channel();
-            channel.updateActor({nick: 'Dinnerbone'});
-            channel.updateActor({nick: 'Djinnibone'});
+            channel.updateActor({nick: 'Dinnerbone', user: {ident: 'dinnerbone'}});
+            channel.updateActor({nick: 'Djinnibone', user: {ident: 'djinnibone'}});
         });
 
         it('removes known actor', () => {
             channel.removeActor({nick: 'Dinnerbone'});
             expect(channel.actors).to.deep.equal({
-                Djinnibone: {nick: 'Djinnibone'},
+                Djinnibone: {ident: 'djinnibone'},
             });
         });
 
         it('ignores unknown actor', () => {
             channel.removeActor({nick: 'Nobody'});
             expect(channel.actors).to.deep.equal({
-                Dinnerbone: {nick: 'Dinnerbone'},
-                Djinnibone: {nick: 'Djinnibone'},
+                Dinnerbone: {ident: 'dinnerbone'},
+                Djinnibone: {ident: 'djinnibone'},
             });
         });
     });

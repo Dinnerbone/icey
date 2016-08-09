@@ -15,7 +15,7 @@ class SingleAuthorEvent extends Event {
     }
 
     apply(channel) {
-        this.author = channel.updateActor(this.author);
+        channel.updateActor(this.author);
     }
 }
 
@@ -52,8 +52,8 @@ const Events = Object.freeze({
         }
 
         apply(channel) {
-            this.author = channel.updateActor(this.author);
-            this.victim = channel.updateActor(this.victim);
+            channel.updateActor(this.author);
+            channel.updateActor(this.victim);
             channel.removeActor(this.victim);
         }
     },
@@ -128,14 +128,13 @@ class Channel {
     }
 
     updateActor(actor) {
-        let result = this.actors[actor.nick];
-        if (result === undefined) {
-            result = Object.assign({}, actor);
-            this.actors[actor.nick] = result;
-        } else {
-            Object.assign(result, actor);
+        let user = this.actors[actor.nick];
+        if (user === undefined) {
+            user = {};
+            this.actors[actor.nick] = user;
         }
-        return result;
+        if ('user' in actor) Object.assign(user, actor.user);
+        actor.user = user;
     }
 
     removeActor(actor) {

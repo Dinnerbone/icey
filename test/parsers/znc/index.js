@@ -35,8 +35,10 @@ describe('Parsing a line', () => {
         expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Joins: Dinnerbone (dinnerbone@dinnerbone.com)')).to.deep.equal(
             new Channel.Events.Join('2001-01-01 01:23:45', {
                 nick: 'Dinnerbone',
-                ident: 'dinnerbone',
-                host: 'dinnerbone.com',
+                user: {
+                    ident: 'dinnerbone',
+                    host: 'dinnerbone.com',
+                },
             })
         );
     });
@@ -106,8 +108,10 @@ describe('Parsing a line', () => {
             expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Parts: Dinnerbone (dinnerbone@dinnerbone.com) (Goodbye, cruel channel!)')).to.deep.equal(
                 new Channel.Events.Part('2001-01-01 01:23:45', {
                     nick: 'Dinnerbone',
-                    ident: 'dinnerbone',
-                    host: 'dinnerbone.com',
+                    user: {
+                        ident: 'dinnerbone',
+                        host: 'dinnerbone.com',
+                    },
                 }, 'Goodbye, cruel channel!')
             );
         });
@@ -116,8 +120,10 @@ describe('Parsing a line', () => {
             expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Parts: Dinnerbone (dinnerbone@dinnerbone.com) ()')).to.deep.equal(
                 new Channel.Events.Part('2001-01-01 01:23:45', {
                     nick: 'Dinnerbone',
-                    ident: 'dinnerbone',
-                    host: 'dinnerbone.com',
+                    user: {
+                        ident: 'dinnerbone',
+                        host: 'dinnerbone.com',
+                    },
                 }, '')
             );
         });
@@ -128,8 +134,10 @@ describe('Parsing a line', () => {
             expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Quits: Dinnerbone (dinnerbone@dinnerbone.com) (Goodbye, cruel network!)')).to.deep.equal(
                 new Channel.Events.Quit('2001-01-01 01:23:45', {
                     nick: 'Dinnerbone',
-                    ident: 'dinnerbone',
-                    host: 'dinnerbone.com',
+                    user: {
+                        ident: 'dinnerbone',
+                        host: 'dinnerbone.com',
+                    },
                 }, 'Goodbye, cruel network!')
             );
         });
@@ -138,8 +146,10 @@ describe('Parsing a line', () => {
             expect(new ZncParser().parseLine('2001-01-01', '[01:23:45] *** Quits: Dinnerbone (dinnerbone@dinnerbone.com) ()')).to.deep.equal(
                 new Channel.Events.Quit('2001-01-01 01:23:45', {
                     nick: 'Dinnerbone',
-                    ident: 'dinnerbone',
-                    host: 'dinnerbone.com',
+                    user: {
+                        ident: 'dinnerbone',
+                        host: 'dinnerbone.com',
+                    },
                 }, '')
             );
         });
