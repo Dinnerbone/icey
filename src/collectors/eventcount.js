@@ -39,29 +39,29 @@ module.exports = class EventCountCollector extends Collector {
         }
     }
 
-    onAction(time, nick, action) {
+    onAction(time, nick) {
         this.increment(time, 'action', nick);
     }
 
-    onMessage(time, nick, message) {
+    onMessage(time, nick) {
         this.increment(time, 'message', nick);
     }
 
-    onKick(time, nick, victim, message) {
+    onKick(time, nick) {
         this.increment(time, 'kick', nick);
     }
 
-    onMode(time, nick, mode) {
+    onMode(time, nick) {
         this.increment(time, 'mode', nick);
     }
 
-    onNotice(time, nick, message) {
+    onNotice(time, nick) {
         // Notices will be treated as messages, as I don't think they're used in a channel context enough
         // to justify their own counter.
         this.increment(time, 'message', nick);
     }
 
-    onTopic(time, nick, topic) {
+    onTopic(time, nick) {
         this.increment(time, 'topic', nick);
     }
 };
