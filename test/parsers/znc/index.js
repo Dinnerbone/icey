@@ -3,8 +3,7 @@ chai.use(require('sinon-chai'));
 const sinon = require('sinon');
 const expect = chai.expect;
 const ZncParser = require('../../../src/parsers/znc');
-const Collector = require('../../../src/Collector');
-const moment = require('moment');
+const Collector = require('../../../src/collector');
 
 describe('Parsing a line', () => {
     let collector;
