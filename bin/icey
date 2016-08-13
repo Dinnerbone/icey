@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+process.title = 'icey';
+require('../src/cli')(process.argv.slice(2));

@@ -2,7 +2,8 @@
   "name": "icey",
   "version": "0.0.0",
   "description": "IRC statistics and fun",
-  "main": "index.js",
+  "main": "src/icey",
+  "bin": "bin/icey",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec"
   },
@@ -25,6 +26,7 @@
     "sinon-chai": "^2.8.0"
   },
   "dependencies": {
+    "commander": "^2.9.0",
     "event-stream": "^3.3.4",
     "moment": "^2.14.1",
     "mz": "^2.4.0",
