@@ -32,11 +32,11 @@ describe('Icey', () => {
 
     describe('Parser', () => {
         describe('By name', () => {
-            let parserSpy;
+            let parser;
 
             beforeEach(() => {
-                parserSpy = sinon.spy();
-                icey.parsers.__spy = parserSpy;
+                parser = sinon.stub().returns(Promise.resolve());
+                icey.parsers.__spy = parser;
             });
 
             afterEach(() => {
@@ -46,7 +46,7 @@ describe('Icey', () => {
             it('is given collector and config', () => {
                 const config = {name: '__spy', foo: 'bar'};
                 icey({parser: config});
-                expect(parserSpy).to.have.been.calledOnce.and.calledWithExactly(sinon.match.instanceOf(Collector), config);
+                expect(parser).to.have.been.calledOnce.and.calledWithExactly(sinon.match.instanceOf(Collector), config);
             });
 
             it('errors when unknown', () => {
@@ -56,7 +56,7 @@ describe('Icey', () => {
 
         describe('As function', () => {
             it('is called with a collector', () => {
-                const parser = sinon.spy();
+                const parser = sinon.stub().returns(Promise.resolve());
                 icey({parser});
                 expect(parser).to.have.been.calledOnce.and.calledWithExactly(sinon.match.instanceOf(Collector));
             });
