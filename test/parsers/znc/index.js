@@ -4,27 +4,28 @@ const sinon = require('sinon');
 const expect = chai.expect;
 const ZncParser = require('../../../src/parsers/znc');
 const Collector = require('../../../src/collector');
+const path = require('path');
 
-describe('Parsing a line', () => {
-    let collector;
-    let parser;
-    const on = {};
+let collector;
+let parser;
+const on = {};
 
-    beforeEach(() => {
-        collector = new Collector();
-        parser = new ZncParser(collector);
-        on.message = sinon.spy(collector, 'onMessage');
-        on.action = sinon.spy(collector, 'onAction');
-        on.join = sinon.spy(collector, 'onJoin');
-        on.kick = sinon.spy(collector, 'onKick');
-        on.mode = sinon.spy(collector, 'onMode');
-        on.nick = sinon.spy(collector, 'onNick');
-        on.notice = sinon.spy(collector, 'onNotice');
-        on.part = sinon.spy(collector, 'onPart');
-        on.quit = sinon.spy(collector, 'onQuit');
-        on.topic = sinon.spy(collector, 'onTopic');
-    });
+beforeEach(() => {
+    collector = new Collector();
+    parser = new ZncParser(collector);
+    on.message = sinon.spy(collector, 'onMessage');
+    on.action = sinon.spy(collector, 'onAction');
+    on.join = sinon.spy(collector, 'onJoin');
+    on.kick = sinon.spy(collector, 'onKick');
+    on.mode = sinon.spy(collector, 'onMode');
+    on.nick = sinon.spy(collector, 'onNick');
+    on.notice = sinon.spy(collector, 'onNotice');
+    on.part = sinon.spy(collector, 'onPart');
+    on.quit = sinon.spy(collector, 'onQuit');
+    on.topic = sinon.spy(collector, 'onTopic');
+});
 
+describe('#parseLine(line)', () => {
     describe('Parsing a message', () => {
         it('Ordinary message', () => {
             parser.parseLine('2001-01-01', '[01:23:45] <Dinnerbone> Hello world! :)');
@@ -139,5 +140,60 @@ describe('Parsing a line', () => {
             parser.parseLine('2001-01-01', '[01:23:45] *** Dinnerbone changes topic to \'\'');
             expect(on.topic).to.have.been.calledOnce.calledWithExactly(sinon.match(time => time.isSame('2001-01-01T01:23:45Z')), 'Dinnerbone', '');
         });
+    });
+});
+
+describe('#parseFile(date, path)', () => {
+    it('reads lines in correct order', () => {
+        const parseLine = sinon.spy(parser, 'parseLine');
+        return parser.parseFile('2010-01-01', `${__dirname}/fixtures/#simple_sessions/2010-01-01.log`)
+            .then(() => {
+                expect(parseLine).to.have.callCount(5);
+                expect(parseLine.getCall(0)).to.be.calledWithExactly('2010-01-01', '[00:00:00] *** Joins: Dinnerbone (dinnerbone@dinnerbone.com)');
+                expect(parseLine.getCall(1)).to.be.calledWithExactly('2010-01-01', '[00:01:00] *** ChanServ sets mode: +o Dinnerbone');
+                expect(parseLine.getCall(2)).to.be.calledWithExactly('2010-01-01', '[00:02:00] <Dinnerbone> Hello world! :)');
+                expect(parseLine.getCall(3)).to.be.calledWithExactly('2010-01-01', '[00:03:00] *** Dinnerbone changes topic to \'Hot Topic!\'');
+                expect(parseLine.getCall(4)).to.be.calledWithExactly('2010-01-01', '[00:04:00] *** Quits: Dinnerbone (dinnerbone@dinnerbone.com) (Goodbye, world!)');
+            });
+    });
+});
+
+describe('#parseDir(path)', () => {
+    it('parses files in order, ignoring invalid', () => {
+        const parseFile = sinon.spy(parser, 'parseFile');
+        const dir = `${__dirname}/fixtures/#simple_sessions`;
+        return parser.parseDir(dir)
+            .then(() => {
+                expect(parseFile).to.be.calledThrice;
+                expect(parseFile.getCall(0)).to.be.calledWithExactly('2010-01-01', path.join(dir, '2010-01-01.log'));
+                expect(parseFile.getCall(1)).to.be.calledWithExactly('2011-05-10', path.join(dir, '2011-05-10.log'));
+                expect(parseFile.getCall(2)).to.be.calledWithExactly('2011-05-11', path.join(dir, '2011-05-11.log'));
+            });
+    });
+});
+
+describe('#process(collector, config)', () => {
+    it('config requires a path', () => {
+        const collector = new Collector();
+        const config = {};
+        expect(() => ZncParser.process(collector, config)).to.throw('Parser config: Missing \'path\' string');
+    });
+
+    it('config path must be string', () => {
+        const collector = new Collector();
+        const config = {path: 5};
+        expect(() => ZncParser.process(collector, config)).to.throw('Parser config: \'path\' is invalid (should be a string!)');
+    });
+
+    it('processes all files in path', () => {
+        const collector = new Collector();
+        const config = {path: `${__dirname}/fixtures/#simple_sessions`};
+        const parseDir = sinon.spy(ZncParser.prototype, 'parseDir');
+        try {
+            ZncParser.process(collector, config);
+            expect(parseDir).to.be.calledOnce.and.calledWithExactly(`${__dirname}/fixtures/#simple_sessions`);
+        } finally {
+            parseDir.restore();
+        }
     });
 });

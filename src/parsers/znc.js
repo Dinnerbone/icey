@@ -2,6 +2,7 @@ const XRegExp = require('xregexp');
 const fs = require('mz/fs');
 const es = require('event-stream');
 const moment = require('moment');
+const path = require('path');
 
 class ZncParser {
     constructor(counter) {
@@ -70,16 +71,38 @@ class ZncParser {
         return null;
     }
 
-    parseFile(date, filename) {
+    parseFile(date, file) {
         return new Promise((resolve, reject) => {
-            fs.createReadStream(filename)
+            fs.createReadStream(file)
                 .pipe(es.split())
                 .pipe(es.mapSync(line => this.parseLine(date, line)))
                 .on('error', error => reject(error))
-                .on('end', () => {
-                    resolve();
-                });
+                .on('end', () => resolve());
         });
+    }
+
+    parseDir(dir) {
+        return fs.readdir(dir)
+            .then(files => {
+                const dates = [];
+                let result = Promise.resolve();
+                files.forEach(file => {
+                    const name = path.parse(file).name;
+                    const date = moment(name, 'YYYY-MM-DD');
+                    if (date.isValid()) dates.push({date, name, path: path.join(dir, file)});
+                });
+                dates.sort((a, b) => a.date.isAfter(b.date) ? 1 : -1);
+                dates.forEach(file => {
+                    result = result.then(() => this.parseFile(file.name, file.path));
+                });
+                return result;
+            });
+    }
+
+    static process(collector, config) {
+        if (config.path === undefined) throw new Error('Parser config: Missing \'path\' string');
+        if (typeof config.path !== 'string') throw new Error('Parser config: \'path\' is invalid (should be a string!)');
+        return new ZncParser(collector).parseDir(config.path);
     }
 }
 

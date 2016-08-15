@@ -9,7 +9,7 @@ const getConfigPath = args => {
     throw new Error('Too many parameters! Usage: [configPath]');
 };
 
-module.exports = (args, icey=require('./icey')) => {
+module.exports = (args, icey) => {
     const configPath = getConfigPath(args);
     let json;
     try {
