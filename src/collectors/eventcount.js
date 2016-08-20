@@ -64,4 +64,8 @@ module.exports = class EventCountCollector extends Collector {
     onTopic(time, nick) {
         this.increment(time, 'topic', nick);
     }
+
+    save(writeFile) {
+        return writeFile('eventcount', this.counter);
+    }
 };

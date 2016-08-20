@@ -107,3 +107,32 @@ describe('#increment(time, event, nick)', () => {
         });
     });
 });
+
+describe('#save(writeFile)', () => {
+    it('saves to file', () => {
+        const collector = new EventCountCollector();
+        const writeFile = sinon.stub().returns(Promise.resolve());
+        collector.increment(moment.utc('2005-05-15T12:13:14Z'), 'message', 'Dinnerbone');
+        return collector.save(writeFile)
+            .then(() => {
+                expect(writeFile).to.be.calledOnce.and.calledWithExactly('eventcount', {
+                    message: {
+                        total: 1,
+                        byNick: {Dinnerbone: 1},
+                        byDay: {
+                            '2005-05-15': {
+                                total: 1,
+                                byNick: {Dinnerbone: 1},
+                                byHour: {
+                                    12: {
+                                        total: 1,
+                                        byNick: {Dinnerbone: 1},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                });
+            });
+    });
+});

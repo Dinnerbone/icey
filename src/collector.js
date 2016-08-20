@@ -1,7 +1,23 @@
 /* eslint no-unused-vars: "off" */
 
-class CombinedCollector {
+class Collector {
+    onAction(time, nick, action) {}
+    onMessage(time, nick, message) {}
+    onJoin(time, nick) {}
+    onKick(time, nick, victim, message) {}
+    onMode(time, nick, mode) {}
+    onNick(time, oldNick, newNick) {}
+    onNotice(time, nick, message) {}
+    onPart(time, nick, message) {}
+    onQuit(time, nick, message) {}
+    onTopic(time, nick, topic) {}
+
+    save(writeFile) {}
+}
+
+class CombinedCollector extends Collector {
     constructor(collectors) {
+        super();
         this.collectors = collectors;
     }
 
@@ -44,21 +60,14 @@ class CombinedCollector {
     onTopic(...args) {
         this.collectors.forEach(collector => collector.onTopic(...args));
     }
+
+    save(writeFile) {
+        let promise = Promise.resolve();
+        this.collectors.forEach(collector => promise = promise.then(() => collector.save(writeFile)));
+        return promise;
+    }
 }
 
-module.exports = class Collector {
-    onAction(time, nick, action) {}
-    onMessage(time, nick, message) {}
-    onJoin(time, nick) {}
-    onKick(time, nick, victim, message) {}
-    onMode(time, nick, mode) {}
-    onNick(time, oldNick, newNick) {}
-    onNotice(time, nick, message) {}
-    onPart(time, nick, message) {}
-    onQuit(time, nick, message) {}
-    onTopic(time, nick, topic) {}
+Collector.combine = collectors => new CombinedCollector(collectors);
 
-    static combine(collectors) {
-        return new CombinedCollector(collectors);
-    }
-};
+module.exports = Collector;

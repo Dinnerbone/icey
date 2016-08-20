@@ -151,4 +151,15 @@ describe('Combined Collector', () => {
         });
     });
 
+    describe('#save(writeFile)', () => {
+        it('is delegated in sequence', () => {
+            const save = [sinon.stub(collectors[0], 'save').returns(Promise.resolve()), sinon.stub(collectors[1], 'save').returns(Promise.resolve())];
+            const writeFile = () => Promise.resolve();
+            return combined.save(writeFile)
+                .then(() => {
+                    expect(save[0]).to.be.calledOnce.and.calledWithExactly(writeFile);
+                    expect(save[1]).to.be.calledOnce.and.calledWithExactly(writeFile);
+                });
+        });
+    });
 });
