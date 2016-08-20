@@ -5,8 +5,9 @@ const moment = require('moment');
 const path = require('path');
 
 class ZncParser {
-    constructor(counter) {
+    constructor(counter, progress) {
         this.counter = counter;
+        this.progress = progress;
 
         const subs = {
             time: XRegExp('\\[(?<time>\\d{2}:\\d{2}:\\d{2})\\]'),
@@ -86,23 +87,37 @@ class ZncParser {
             .then(files => {
                 const dates = [];
                 let result = Promise.resolve();
+                let totalBytes = 0;
                 files.forEach(file => {
                     const name = path.parse(file).name;
                     const date = moment(name, 'YYYY-MM-DD');
-                    if (date.isValid()) dates.push({date, name, path: path.join(dir, file)});
+                    if (date.isValid()) {
+                        const filename = path.join(dir, file);
+                        const bytes = fs.statSync(filename).size;
+                        totalBytes += bytes;
+                        dates.push({date, name, path: filename, size: bytes});
+                    }
                 });
                 dates.sort((a, b) => a.date.isAfter(b.date) ? 1 : -1);
+                this.progress.start('parsing log files [:bar] :percent (:date) - :etas remaining', totalBytes);
                 dates.forEach(file => {
-                    result = result.then(() => this.parseFile(file.name, file.path));
+                    result = result
+                        .then(() => this.parseFile(file.name, file.path))
+                        .then(() => this.progress.tick(file.size, {date: file.name}));
                 });
                 return result;
-            });
+            })
+            .catch(err => {
+                this.progress.end();
+                throw err;
+            })
+            .then(() => this.progress.end());
     }
 
-    static process(collector, config) {
+    static process(collector, config, progress) {
         if (config.path === undefined) throw new Error('Parser config: Missing \'path\' string');
         if (typeof config.path !== 'string') throw new Error('Parser config: \'path\' is invalid (should be a string!)');
-        return new ZncParser(collector).parseDir(config.path);
+        return new ZncParser(collector, progress).parseDir(config.path);
     }
 }
 

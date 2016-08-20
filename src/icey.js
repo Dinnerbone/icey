@@ -1,4 +1,5 @@
 const Collector = require('./collectors/eventcount');
+const CLIProgressBar = require('./progress/bar');
 
 const icey = function(config) {
     if (typeof config !== 'object') throw new Error('Invalid config (must be an object)');
@@ -43,7 +44,7 @@ const icey = function(config) {
     }
 
     const collector = Collector.combine(collectors);
-    parser(collector, config.parser)
+    parser(collector, config.parser, new CLIProgressBar())
         .then(() => collector.save((...args) => writer.write(...args)))
         .catch(err => {
             console.error(err);
@@ -60,9 +61,9 @@ const loadWriter = name => config => {
     return new writer(config);
 };
 
-const loadParser = name => (collector, config) => {
+const loadParser = name => (collector, config, progress) => {
     const parser = require(`./parsers/${name}`);
-    return parser.process(collector, config);
+    return parser.process(collector, config, progress);
 };
 
 icey.parsers = {

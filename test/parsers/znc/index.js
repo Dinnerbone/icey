@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const expect = chai.expect;
 const ZncParser = require('../../../src/parsers/znc');
 const Collector = require('../../../src/collector');
+const VoidProgressBar = require('../../../src/progress/void');
 const path = require('path');
 
 let collector;
@@ -12,7 +13,7 @@ const on = {};
 
 beforeEach(() => {
     collector = new Collector();
-    parser = new ZncParser(collector);
+    parser = new ZncParser(collector, new VoidProgressBar());
     on.message = sinon.spy(collector, 'onMessage');
     on.action = sinon.spy(collector, 'onAction');
     on.join = sinon.spy(collector, 'onJoin');
