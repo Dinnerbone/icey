@@ -28,8 +28,10 @@
   "dependencies": {
     "commander": "^2.9.0",
     "event-stream": "^3.3.4",
+    "mkdirp": "^0.5.1",
     "moment": "^2.14.1",
     "mz": "^2.4.0",
+    "rimraf": "^2.5.4",
     "xregexp": "^3.1.1"
   }
 }

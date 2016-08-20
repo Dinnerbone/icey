@@ -61,9 +61,9 @@ class CombinedCollector extends Collector {
         this.collectors.forEach(collector => collector.onTopic(...args));
     }
 
-    save(writeFile) {
+    save(write) {
         let promise = Promise.resolve();
-        this.collectors.forEach(collector => promise = promise.then(() => collector.save(writeFile)));
+        this.collectors.forEach(collector => promise = promise.then(() => collector.save(write)));
         return promise;
     }
 }

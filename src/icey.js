@@ -1,5 +1,4 @@
 const Collector = require('./collectors/eventcount');
-const fs = require('mz/fs');
 
 const icey = function(config) {
     if (typeof config !== 'object') throw new Error('Invalid config (must be an object)');
@@ -17,6 +16,19 @@ const icey = function(config) {
         throw new Error('Invalid config: \'parser\' is invalid (should be an object)');
     }
 
+    let writer;
+    if (typeof config.writer === 'object') {
+        if (typeof config.writer.name === 'undefined') throw new Error('Invalid config: Missing \'writer.name\' string');
+        if (typeof config.writer.name !== 'string') throw new Error('Invalid config: \'writer.name\' is invalid (should be a string)');
+        const name = config.writer.name;
+        if (typeof icey.writers[name] === 'undefined') throw new Error(`Invalid config: unknown writer '${name}'`);
+        writer = icey.writers[name](config.writer);
+    } else if (config.writer === undefined) {
+        throw new Error('Invalid config: Missing \'writer\' block');
+    } else {
+        throw new Error('Invalid config: \'writer\' is invalid (should be an object)');
+    }
+
     const collectors = [];
     if (typeof config.collectors === 'object') {
         for (const name in config.collectors) {
@@ -31,13 +43,21 @@ const icey = function(config) {
     }
 
     const collector = Collector.combine(collectors);
-    const writeFile = (name, object) => fs.writeFile(name, JSON.stringify(object));
-    parser(collector, config.parser).then(() => collector.save(writeFile));
+    parser(collector, config.parser)
+        .then(() => collector.save((...args) => writer.write(...args)))
+        .catch(err => {
+            console.error(err);
+        });
 };
 
 const loadCollector = name => config => {
     const collector = require(`./collectors/${name}`);
     return new collector(config);
+};
+
+const loadWriter = name => config => {
+    const writer = require(`./writers/${name}`);
+    return new writer(config);
 };
 
 const loadParser = name => (collector, config) => {
@@ -47,6 +67,10 @@ const loadParser = name => (collector, config) => {
 
 icey.parsers = {
     znc: loadParser('znc'),
+};
+
+icey.writers = {
+    json: loadWriter('json'),
 };
 
 icey.collectors = {
