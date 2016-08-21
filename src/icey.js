@@ -76,6 +76,7 @@ icey.writers = {
 
 icey.collectors = {
     eventcount: loadCollector('eventcount'),
+    sentiments: loadCollector('sentiments'),
 };
 
 module.exports = icey;

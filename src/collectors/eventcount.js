@@ -2,41 +2,35 @@ const Collector = require('../collector');
 module.exports = class EventCountCollector extends Collector {
     constructor() {
         super();
-        this.counter = {};
+        this.days = {total: {}, nicks: {}};
+        this.hours = {total: {}, nicks: {}};
     }
 
     increment(time, event, nick) {
-        if (this.counter[event] === undefined) this.counter[event] = {total: 0, byNick: {}, byDay: {}};
-        const tally = this.counter[event];
         const day = time.format('YYYY-MM-DD');
         const hour = time.format('H');
-        tally.total++;
 
-        if (tally.byNick[nick] === undefined) {
-            tally.byNick[nick] = 1;
-        } else {
-            tally.byNick[nick]++;
-        }
+        if (this.days.total[day] === undefined) this.days.total[day] = {};
+        const dayTotal = this.days.total[day];
+        if (dayTotal[event] === undefined) dayTotal[event] = 0;
+        dayTotal[event] += 1;
 
-        if (tally.byDay[day] === undefined) tally.byDay[day] = {total: 0, byNick: {}, byHour: {}};
-        const dayTally = tally.byDay[day];
-        dayTally.total++;
+        if (this.days.nicks[nick] === undefined) this.days.nicks[nick] = {};
+        if (this.days.nicks[nick][day] === undefined) this.days.nicks[nick][day] = {};
+        const dayNick = this.days.nicks[nick][day];
+        if (dayNick[event] === undefined) dayNick[event] = 0;
+        dayNick[event] += 1;
 
-        if (dayTally.byNick[nick] === undefined) {
-            dayTally.byNick[nick] = 1;
-        } else {
-            dayTally.byNick[nick]++;
-        }
+        if (this.hours.total[hour] === undefined) this.hours.total[hour] = {};
+        const hourTotal = this.hours.total[hour];
+        if (hourTotal[event] === undefined) hourTotal[event] = 0;
+        hourTotal[event] += 1;
 
-        if (dayTally.byHour[hour] === undefined) dayTally.byHour[hour] = {total: 0, byNick: {}};
-        const hourTally = dayTally.byHour[hour];
-        hourTally.total++;
-
-        if (hourTally.byNick[nick] === undefined) {
-            hourTally.byNick[nick] = 1;
-        } else {
-            hourTally.byNick[nick]++;
-        }
+        if (this.hours.nicks[nick] === undefined) this.hours.nicks[nick] = {};
+        if (this.hours.nicks[nick][hour] === undefined) this.hours.nicks[nick][hour] = {};
+        const hourNick = this.hours.nicks[nick][hour];
+        if (hourNick[event] === undefined) hourNick[event] = 0;
+        hourNick[event] += 1;
     }
 
     onAction(time, nick) {
@@ -66,6 +60,7 @@ module.exports = class EventCountCollector extends Collector {
     }
 
     save(write) {
-        return write('eventcount', this.counter);
+        return write('eventcount/days', this.days.total)
+            .then(() => write('eventcount/hours', this.hours.total));
     }
 };

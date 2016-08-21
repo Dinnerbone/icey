@@ -58,49 +58,62 @@ describe('#increment(time, event, nick)', () => {
     it('increments counters', () => {
         for (let i = 0; i < 5; i++) collector.increment(moment.utc('2005-05-15T12:13:14Z'), 'message', 'Dinnerbone');
         for (let i = 0; i < 10; i++) collector.increment(moment.utc('2005-05-15T12:13:14Z'), 'message', 'Djinnibone');
-        for (let i = 0; i < 3; i++) collector.increment(moment.utc('2005-08-09T00:13:14Z'), 'message', 'Dinnerbone');
+        for (let i = 0; i < 3; i++) collector.increment(moment.utc('2005-08-09T00:13:14Z'), 'action', 'Dinnerbone');
         for (let i = 0; i < 3; i++) collector.increment(moment.utc('2005-08-09T11:13:14Z'), 'message', 'Dinnerbone');
-        expect(collector.counter.message).deep.equals({
-            total: 21,
-            byNick: {
-                Dinnerbone: 11,
-                Djinnibone: 10,
-            },
-            byDay: {
+        expect(collector.days).deep.equals({
+            total: {
                 '2005-05-15': {
-                    total: 15,
-                    byNick: {
-                        Dinnerbone: 5,
-                        Djinnibone: 10,
-                    },
-                    byHour: {
-                        12: {
-                            total: 15,
-                            byNick: {
-                                Dinnerbone: 5,
-                                Djinnibone: 10,
-                            },
-                        },
-                    },
+                    message: 15,
                 },
                 '2005-08-09': {
-                    total: 6,
-                    byNick: {
-                        Dinnerbone: 6,
+                    message: 3,
+                    action: 3,
+                },
+            },
+            nicks: {
+                Dinnerbone: {
+                    '2005-05-15': {
+                        message: 5,
                     },
-                    byHour: {
-                        0: {
-                            total: 3,
-                            byNick: {
-                                Dinnerbone: 3,
-                            },
-                        },
-                        11: {
-                            total: 3,
-                            byNick: {
-                                Dinnerbone: 3,
-                            },
-                        },
+                    '2005-08-09': {
+                        action: 3,
+                        message: 3,
+                    },
+                },
+                Djinnibone: {
+                    '2005-05-15': {
+                        message: 10,
+                    },
+                },
+            },
+        });
+        expect(collector.hours).deep.equals({
+            total: {
+                '0': {
+                    action: 3,
+                },
+                '11': {
+                    message: 3,
+                },
+                '12': {
+                    message: 15,
+                },
+            },
+            nicks: {
+                Dinnerbone: {
+                    '0': {
+                        action: 3,
+                    },
+                    '11': {
+                        message: 3,
+                    },
+                    '12': {
+                        message: 5,
+                    },
+                },
+                Djinnibone: {
+                    '12': {
+                        message: 10,
                     },
                 },
             },
@@ -115,22 +128,15 @@ describe('#save(writeFile)', () => {
         collector.increment(moment.utc('2005-05-15T12:13:14Z'), 'message', 'Dinnerbone');
         return collector.save(writeFile)
             .then(() => {
-                expect(writeFile).to.be.calledOnce.and.calledWithExactly('eventcount', {
-                    message: {
-                        total: 1,
-                        byNick: {Dinnerbone: 1},
-                        byDay: {
-                            '2005-05-15': {
-                                total: 1,
-                                byNick: {Dinnerbone: 1},
-                                byHour: {
-                                    12: {
-                                        total: 1,
-                                        byNick: {Dinnerbone: 1},
-                                    },
-                                },
-                            },
-                        },
+                expect(writeFile).to.be.calledTwice;
+                expect(writeFile).to.be.calledWithExactly('eventcount/days', {
+                    '2005-05-15': {
+                        message: 1,
+                    },
+                });
+                expect(writeFile).to.be.calledWithExactly('eventcount/hours', {
+                    '12': {
+                        message: 1,
                     },
                 });
             });

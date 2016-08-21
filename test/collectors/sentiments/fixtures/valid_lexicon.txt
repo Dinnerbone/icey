@@ -1,0 +1,22 @@
+These lines should be ignored.
+---- also ignored ----
+:)
+Absolutely everything should be ignored, except for the following valid lines.
+hug	joy	1
+hug	sadness	0
+hug	anger	0
+hug	fear	0
+hug	positive	1
+hug	negative	0
+haunt	joy	0
+haunt	sadness	0
+haunt	anger	0
+haunt	fear	1
+haunt	positive	0
+haunt	negative	1
+intruder	joy	0
+intruder	sadness	0
+intruder	anger	1
+intruder	fear	1
+intruder	positive	0
+intruder	negative	1
